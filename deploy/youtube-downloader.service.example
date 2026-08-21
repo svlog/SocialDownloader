@@ -1,0 +1,21 @@
+[Unit]
+Description=Social Downloader - Unified Backend Service (yt-dlp)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/tiktokweb
+ExecStart=/usr/bin/python3 /var/www/tiktokweb/server/media-handler.py
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+Environment=MEDIA_HANDLER_PORT=9123
+
+# Security sandbox
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

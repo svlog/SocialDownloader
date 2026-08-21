@@ -1,0 +1,52 @@
+server {
+    listen 443 ssl;
+    server_name tik.devcode.ovh;
+
+    ssl_certificate /etc/letsencrypt/live/devcode.ovh/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/devcode.ovh/privkey.pem;
+
+    root /home/devcode/domains/tik.devcode.ovh/public_html/dist;
+    index index.html;
+
+    # 1. TikTok — proxy a tikwm.com
+    location /api/tikwm {
+        proxy_pass https://www.tikwm.com/api/;
+        proxy_set_header Host www.tikwm.com;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_ssl_server_name on;
+    }
+
+    # 2. Instagram — proxy al backend nativo Python (puerto 9123)
+    location /api/instagram {
+        proxy_pass http://127.0.0.1:9123/info;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 300s;
+    }
+
+    location /api/instagram/download {
+        proxy_pass http://127.0.0.1:9123/download;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 600s;
+        proxy_buffering off;
+    }
+
+    # 3. YouTube — proxy al backend nativo Python (puerto 9123)
+    location /api/youtube/ {
+        proxy_pass http://127.0.0.1:9123/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 600s;
+        proxy_buffering off;
+    }
+
+    # 4. SPA Frontend Fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
